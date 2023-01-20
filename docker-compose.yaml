@@ -8,7 +8,9 @@ services:
       - mainnet
     restart: unless-stopped
     ports:
-      - "9380:8080"
+      - target: 8080
+        publish: 9380
+        mode: host
     entrypoint: ["/icanhazallips/icanhazallips"]
     cap_drop:
       - ALL
