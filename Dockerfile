@@ -13,8 +13,8 @@ RUN apk add openssl
 WORKDIR /certs
 RUN openssl req -nodes -new -x509 -subj="CN=icanhazallips.terminaldweller.com" -keyout server.key -out server.cert
 
-FROM gcr.io/distroless/static-debian11
-# FROM alpine:3.17
+# FROM gcr.io/distroless/static-debian11
+FROM alpine:3.17
 COPY --from=certbuilder /certs /certs
 COPY --from=builder /icanhazallips/icanhazallips /icanhazallips/icanhazallips
 ENTRYPOINT ["/icanhazallips/icanhazallips"]

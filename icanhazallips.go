@@ -3,6 +3,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -12,6 +13,8 @@ import (
 func getIP(r *http.Request) (string, error) {
 	ips := r.Header.Get("X-Forwarded-For")
 	splitIps := strings.Split(ips, ",")
+
+	fmt.Println(r.RemoteAddr)
 
 	if len(splitIps) > 0 {
 		netIP := net.ParseIP(splitIps[len(splitIps)-1])
