@@ -9,7 +9,7 @@ services:
     restart: unless-stopped
     ports:
       - target: 8080
-        publish: 9380
+        published: 9380
         mode: host
     entrypoint: ["/icanhazallips/icanhazallips"]
     cap_drop:
