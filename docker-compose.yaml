@@ -14,6 +14,13 @@ services:
     entrypoint: ["/icanhazallips/icanhazallips"]
     cap_drop:
       - ALL
+    environment:
+      - APP_ADDR=:8080
+      - APP_CONTEXT_TIMEOUT=10
+      - APP_READ_HEADER_TIMEOUT=3
+      - APP_READ_TIMEOUT=5
+      - APP_WRITE_TIMEOUT=5
+      - APP_IDLE_TIMEOUT=5
 networks:
   mainnet:
     driver: bridge
