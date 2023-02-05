@@ -2,19 +2,43 @@
 package main
 
 import (
+	"crypto/tls"
 	"errors"
-	"fmt"
 	"log"
 	"net"
 	"net/http"
+	"os"
+	"strconv"
 	"strings"
+	"time"
 )
 
-func getIP(r *http.Request) (string, error) {
-	ips := r.Header.Get("X-Forwarded-For")
+const (
+	defaultTimeOut = 10.
+)
+
+var (
+	errMalformedAdr  = errors.New("malformed address")
+	errIPNotFound    = errors.New("ip not found")
+	errBadFloatValue = errors.New("bad float value")
+	errBadConfig     = errors.New("bad config")
+)
+
+func getDefaultOptions() map[string]float64 {
+	return map[string]float64{
+		"APP_CONTEXT_TIMEOUT":     defaultTimeOut,
+		"APP_READ_HEADER_TIMEOUT": defaultTimeOut,
+		"APP_READ_TIMEOUT":        defaultTimeOut,
+		"APP_WRITE_TIMEOUT":       defaultTimeOut,
+		"APP_IDLE_TIMEOUT":        defaultTimeOut,
+	}
+}
+
+func getIP(request *http.Request) (string, error) {
+	ips := request.Header.Get("X-Forwarded-For")
 	splitIps := strings.Split(ips, ",")
 
-	fmt.Println(r.RemoteAddr)
+	log.Println(request.RemoteAddr)
 
 	if len(splitIps) > 0 {
 		netIP := net.ParseIP(splitIps[len(splitIps)-1])
@@ -23,35 +47,132 @@ func getIP(r *http.Request) (string, error) {
 		}
 	}
 
-	ip, _, err := net.SplitHostPort(r.RemoteAddr)
+	ip, _, err := net.SplitHostPort(request.RemoteAddr)
 	if err != nil {
-		return "", err
+		return "", errMalformedAdr
 	}
 
-	netIP := net.ParseIP(ip)
-	if netIP != nil {
+	if netIP := net.ParseIP(ip); netIP != nil {
 		ip := netIP.String()
 		if ip == "::1" {
 			return "127.0.0.1", nil
 		}
+
 		return ip, nil
 	}
 
-	return "", errors.New("IP not found")
+	return "", errIPNotFound
 }
 
-func handler(w http.ResponseWriter, r *http.Request) {
-	ip, err := getIP(r)
+func ipHandler(writer http.ResponseWriter, request *http.Request) {
+	ipAddr, err := getIP(request)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		writer.WriteHeader(http.StatusInternalServerError)
+
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(ip))
+	writer.WriteHeader(http.StatusOK)
+
+	writtenLen, err := writer.Write([]byte(ipAddr))
+	if err != nil || writtenLen != len(ipAddr) {
+		writer.WriteHeader(http.StatusInternalServerError)
+
+		return
+	}
+}
+
+type Config struct {
+	Addr              string
+	ContextTimeOut    float64
+	ReadHeaderTimeout float64
+	ReadTimeout       float64
+	WriteTimeout      float64
+	IdleTimeout       float64
+}
+
+func getConfigValue(envVarName string) (float64, error) {
+	defaultOptions := getDefaultOptions()
+
+	paramEnv := os.Getenv(envVarName)
+	if paramEnv != "" {
+		param, err := strconv.ParseFloat(paramEnv, 64)
+		if err != nil {
+			return defaultOptions[envVarName], errBadFloatValue
+		}
+
+		return param, nil
+	}
+
+	return defaultOptions[envVarName], nil
+}
+
+func getConfig() (Config, error) {
+	var config Config
+
+	var err error
+
+	appAddrEnv := os.Getenv("APP_ADDR")
+	if appAddrEnv != "" {
+		config.Addr = appAddrEnv
+	} else {
+		config.Addr = ":8080"
+	}
+
+	config.ContextTimeOut, err = getConfigValue("APP_CONTEXT_TIMEOUT")
+	if err != nil {
+		log.Println(err.Error())
+	}
+
+	config.ReadHeaderTimeout, err = getConfigValue("APP_READ_HEADER_TIMEOUT")
+	if err != nil {
+		log.Println(err.Error())
+	}
+
+	config.ReadTimeout, err = getConfigValue("APP_READ_TIMEOUT")
+	if err != nil {
+		log.Println(err.Error())
+	}
+
+	config.WriteTimeout, err = getConfigValue("APP_WRITE_TIMEOUT")
+	if err != nil {
+		log.Println(err.Error())
+	}
+
+	config.IdleTimeout, err = getConfigValue("APP_IDLE_TIMEOUT")
+	if err != nil {
+		log.Println(err.Error())
+	}
+
+	return config, err
 }
 
 func main() {
-	http.HandleFunc("/", handler)
-	log.Fatal(http.ListenAndServeTLS(":8080", "/certs/server.cert", "/certs/server.key", nil))
+	log.SetOutput(os.Stdout)
+	http.HandleFunc("/", ipHandler)
+
+	config, err := getConfig()
+	if err != nil {
+		log.Fatal(errBadConfig)
+	}
+
+	tlsConfig := &tls.Config{
+		MinVersion:               tls.VersionTLS13,
+		CurvePreferences:         []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256},
+		PreferServerCipherSuites: true,
+	}
+
+	server := http.Server{
+		Addr:              config.Addr,
+		ReadHeaderTimeout: time.Duration(config.ReadHeaderTimeout) * time.Second,
+		ReadTimeout:       time.Duration(config.ReadTimeout) * time.Second,
+		WriteTimeout:      time.Duration(config.WriteTimeout) * time.Second,
+		IdleTimeout:       time.Duration(config.IdleTimeout) * time.Second,
+		TLSNextProto:      nil,
+		ErrorLog:          nil,
+		Handler:           nil,
+		TLSConfig:         tlsConfig,
+	}
+
+	log.Fatal(server.ListenAndServeTLS("/certs/server.cert", "/certs/server.key"))
 }
