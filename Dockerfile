@@ -11,7 +11,7 @@ RUN cd /icanhazallips && go build
 FROM alpine:3.17 as certbuilder
 RUN apk add openssl
 WORKDIR /certs
-RUN openssl req -nodes -new -x509 -subj="CN=icanhazallips.terminaldweller.com" -keyout server.key -out server.cert
+RUN openssl req -nodes -new -x509 -subj="/CN=icanhazallips.terminaldweller.com" -keyout server.key -out server.cert
 
 # FROM gcr.io/distroless/static-debian11
 FROM alpine:3.17
