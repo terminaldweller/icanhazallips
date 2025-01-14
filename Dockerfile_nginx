@@ -1,0 +1,7 @@
+FROM alpine:3.21 as certbuilder
+RUN apk add openssl
+WORKDIR /certs
+RUN openssl req -nodes -new -x509 -subj="/CN=icanhazallips.terminaldweller.com" -keyout server.key -out server.cert
+
+FROM nginx:stable-alpine
+COPY --from=certbuilder /certs /certs

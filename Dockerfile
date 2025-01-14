@@ -1,4 +1,4 @@
-FROM alpine:3.17 as builder
+FROM alpine:3.21 as builder
 ENV GOPROXY=https://goproxy.io
 RUN apk update && apk upgrade
 RUN apk add go git
@@ -8,13 +8,6 @@ RUN cd /icanhazallips && go mod download
 COPY *.go /icanhazallips/
 RUN cd /icanhazallips && go build
 
-FROM alpine:3.17 as certbuilder
-RUN apk add openssl
-WORKDIR /certs
-RUN openssl req -nodes -new -x509 -subj="/CN=icanhazallips.terminaldweller.com" -keyout server.key -out server.cert
-
-# FROM gcr.io/distroless/static-debian11
-FROM alpine:3.17
-COPY --from=certbuilder /certs /certs
+FROM alpine:3.21
 COPY --from=builder /icanhazallips/icanhazallips /icanhazallips/icanhazallips
 ENTRYPOINT ["/icanhazallips/icanhazallips"]

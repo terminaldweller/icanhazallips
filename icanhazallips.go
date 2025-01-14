@@ -2,7 +2,6 @@
 package main
 
 import (
-	"crypto/tls"
 	"errors"
 	"log"
 	"net"
@@ -156,12 +155,6 @@ func main() {
 		log.Fatal(errBadConfig)
 	}
 
-	tlsConfig := &tls.Config{
-		MinVersion:               tls.VersionTLS13,
-		CurvePreferences:         []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256},
-		PreferServerCipherSuites: true,
-	}
-
 	server := http.Server{
 		Addr:              config.Addr,
 		ReadHeaderTimeout: time.Duration(config.ReadHeaderTimeout) * time.Second,
@@ -171,8 +164,7 @@ func main() {
 		TLSNextProto:      nil,
 		ErrorLog:          nil,
 		Handler:           nil,
-		TLSConfig:         tlsConfig,
 	}
 
-	log.Fatal(server.ListenAndServeTLS("/certs/server.cert", "/certs/server.key"))
+	log.Fatal(server.ListenAndServe())
 }
