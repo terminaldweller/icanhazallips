@@ -36,6 +36,8 @@ func getDefaultOptions() map[string]float64 {
 }
 
 func getIP(request *http.Request) (string, error) {
+	log.Println("X-Forwarded-For:", request.Header.Get("X-Forwarded-For"))
+	log.Println("X-Real-IP:", request.Header.Get("X-Real-IP"))
 	ips := request.Header.Get("X-Forwarded-For")
 	splitIps := strings.Split(ips, ",")
 
