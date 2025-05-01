@@ -41,8 +41,9 @@ func getIP(request *http.Request) (string, error) {
 
 	log.Println(request.RemoteAddr)
 
-	if len(splitIps) > 0 {
-		netIP := net.ParseIP(splitIps[len(splitIps)-1])
+	if len(splitIps) > 1 {
+		netIP := net.ParseIP(splitIps[len(splitIps)-2])
+		log.Println("one:", netIP.String())
 		if netIP != nil {
 			return netIP.String(), nil
 		}
@@ -59,6 +60,7 @@ func getIP(request *http.Request) (string, error) {
 			return "127.0.0.1", nil
 		}
 
+		log.Println("two:", ip)
 		return ip, nil
 	}
 
