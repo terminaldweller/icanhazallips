@@ -10,6 +10,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/pires/go-proxyproto"
 )
 
 const (
@@ -166,5 +168,16 @@ func main() {
 		Handler:           nil,
 	}
 
-	log.Fatal(server.ListenAndServe())
+	ln, err := net.Listen("tcp", config.Addr)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	proxyListener := &proxyproto.Listener{
+		Listener:          ln,
+		ReadHeaderTimeout: time.Duration(config.ReadHeaderTimeout) * time.Second,
+	}
+	defer proxyListener.Close()
+
+	log.Fatal(server.Serve(proxyListener))
 }
