@@ -54,4 +54,5 @@ services:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
 networks:
   haznet:
+    enable_ipv6: true
     driver: bridge
