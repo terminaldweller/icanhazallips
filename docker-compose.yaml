@@ -39,6 +39,10 @@ services:
         max-size: "100m"
     security_opt:
       - no-new-privileges
+    tmpfs:
+      - /var/cache/nginx:rw,noexec,nosuid,size=64m
+      - /run:rw,noexec,nosuid,size=16m
+    read_only: true
     build:
       context: .
       dockerfile: Dockerfile_nginx
