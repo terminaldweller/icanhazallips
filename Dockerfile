@@ -2,7 +2,6 @@ FROM golang:1.25-alpine3.23 AS builder
 ENV GOPROXY=https://goproxy.io
 RUN apk update && apk upgrade
 RUN apk add go git
-ENV GOPROXY=https://goproxy.io
 COPY go.* /icanhazallips/
 RUN cd /icanhazallips && go mod download
 COPY *.go /icanhazallips/
