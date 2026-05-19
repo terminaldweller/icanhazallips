@@ -39,7 +39,6 @@ services:
         max-size: "100m"
     security_opt:
       - no-new-privileges
-    read_only: true
     build:
       context: .
       dockerfile: Dockerfile_nginx
