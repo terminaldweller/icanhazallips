@@ -27,6 +27,7 @@ services:
       - APP_READ_TIMEOUT=5
       - APP_WRITE_TIMEOUT=5
       - APP_IDLE_TIMEOUT=5
+    user: "65532:65532"
   nginx:
     image: haz_nginx
     deploy:
