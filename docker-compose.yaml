@@ -15,7 +15,7 @@ services:
     build:
       context: .
     networks:
-      - haznet:
+      haznet:
         ipv4_address: 172.44.0.33
     restart: unless-stopped
     entrypoint: ["/icanhazallips/icanhazallips"]
@@ -52,7 +52,7 @@ services:
     ports:
       - "9380:443"
     networks:
-      - haznet:
+      haznet:
         ipv4_address: 172.44.0.17
     restart: unless-stopped
     cap_drop:
