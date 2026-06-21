@@ -28,7 +28,7 @@ services:
       - APP_WRITE_TIMEOUT=5
       - APP_IDLE_TIMEOUT=5
     user: "65532:65532"
-    runetime: runsc
+    runtime: runsc
   nginx:
     image: haz_nginx
     deploy:
@@ -63,7 +63,7 @@ services:
       - NET_BIND_SERVICE
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
-    runetime: runsc
+    runtime: runsc
 networks:
   haznet:
     enable_ipv6: true
